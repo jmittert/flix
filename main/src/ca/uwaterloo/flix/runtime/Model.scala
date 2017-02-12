@@ -16,7 +16,7 @@
 
 package ca.uwaterloo.flix.runtime
 
-import ca.uwaterloo.flix.language.ast.{ExecutableAst, Symbol, Time}
+import ca.uwaterloo.flix.language.ast.{ExecutableAst, Symbol}
 
 /**
   * A class representing the minimal model.
@@ -27,24 +27,35 @@ import ca.uwaterloo.flix.language.ast.{ExecutableAst, Symbol, Time}
   * @param lattices    the lattice facts in the model.
   */
 class Model(root: ExecutableAst.Root,
-            time: Time,
-            definitions: Map[Symbol.DefnSym, () => AnyRef],
+            definitions: Map[Symbol.DefnSym, (Array[AnyRef]) => AnyRef],
             relations: Map[Symbol.TableSym, Iterable[List[AnyRef]]],
             lattices: Map[Symbol.TableSym, Iterable[(List[AnyRef], AnyRef)]]) {
 
-  def getRoot: ExecutableAst.Root = root
+  /**
+    * Evaluates the function with the given fully-qualified name `fqn` and arguments `args`.
+    *
+    * @throws IllegalArgumentException if the fully-qualified name does not exist.
+    */
+  def eval(fqn: String, args: AnyRef*): AnyRef = {
+    val sym = Symbol.mkDefnSym(fqn)
+    definitions.get(sym) match {
+      case None => throw new IllegalArgumentException(s"Unresolved name '$fqn'.")
+      case Some(defn) => defn(args.toArray)
+    }
+  }
 
-  def getTests: Map[Symbol.DefnSym, () => AnyRef] = {
+  /**
+    * Returns a map of all test functions in the program.
+    */
+  def getTests: Map[Symbol.DefnSym, Array[AnyRef] => AnyRef] = {
     definitions filter {
       case (sym, _) => root.definitions(sym).ann.isTest
     }
   }
 
-  def getTime: Time = time
 
-  def getConstant(sym: Symbol.DefnSym): AnyRef = definitions(sym)()
+  def getRoot: ExecutableAst.Root = root
 
-  def getConstant(name: String): AnyRef = getConstant(Symbol.mkDefnSym(name))
 
   def getRelation(name: String): Iterable[List[AnyRef]] =
     getRelationOpt(name).get

@@ -26,13 +26,13 @@ class TestFloat32 extends FunSuite {
 
   def runTest(input: String, output: Float) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/Float32.flix").addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   // Used for testing equality with the Float.NaN type
   def runEqualsTest(input: String, output: Float) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/Float32.flix").addStr(input)
-    assert(output.equals(flix.solve().get.getConstant("r")))
+    assert(output.equals(flix.solve().get.eval("r")))
   }
 
   test("size.01") {

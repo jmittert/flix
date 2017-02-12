@@ -29,17 +29,17 @@ class TestList extends FunSuite {
 
   def runTest(input: String, output: Int) {
     val flix = new Flix().setOptions(options).addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   def runBoolTest(input: String, output: Boolean) {
     val flix = new Flix().setOptions(options).addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   def runAnyTest(input: String, output: AnyRef) {
     val flix = new Flix().setOptions(options).addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   def mkList(xs: List[Int]): AnyRef = Value.mkList(xs.map(x => new Integer(x)))

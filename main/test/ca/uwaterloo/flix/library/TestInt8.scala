@@ -26,7 +26,7 @@ class TestInt8 extends FunSuite {
 
   def runTest(input: String, output: Byte) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/Int8.flix").addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   test("maxValue.01") {

@@ -26,7 +26,7 @@ class TestInt32 extends FunSuite {
 
   def runTest(input: String, output: Int) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/Int32.flix").addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   test("maxValue.01") {

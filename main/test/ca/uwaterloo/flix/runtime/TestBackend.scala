@@ -149,14 +149,14 @@ class TestBackend extends FunSuite {
       this
     }
 
-    def runTest(expected: AnyRef, const: String): Unit = {
-      withClue(s"interpreted value $const:") { assertResult(expected)(interpreted.getConstant(const)) }
-      withClue(s"compiled value $const:") { assertResult(expected)(compiled.getConstant(const)) }
+    def runTest(expected: AnyRef, fqn: String): Unit = {
+      withClue(s"interpreted value $fqn:") { assertResult(expected)(interpreted.eval(fqn)) }
+      withClue(s"compiled value $fqn:") { assertResult(expected)(compiled.eval(fqn)) }
     }
 
-    def runInterceptTest[T <: AnyRef](const:String)(implicit manifest: Manifest[T]): Unit = {
-      withClue(s"interpreted value $const:") { intercept[T](interpreted.getConstant(const)) }
-      withClue(s"compiled value $const:") { intercept[T](compiled.getConstant(const)) }
+    def runInterceptTest[T <: AnyRef](fqn:String)(implicit manifest: Manifest[T]): Unit = {
+      withClue(s"interpreted value $fqn:") { intercept[T](interpreted.eval(fqn)) }
+      withClue(s"compiled value $fqn:") { intercept[T](compiled.eval(fqn)) }
     }
 
     def checkModel(expected: AnyRef, model: String): Unit = {

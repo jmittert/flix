@@ -103,9 +103,9 @@ object Main {
 
           val main = cmdOpts.main
           if (main.nonEmpty) {
-            val name = main.get
-            val timer = new Timer(model.getConstant(name))
-            Console.println(s"$name returned `${Value.pretty(timer.getResult)}' (elapsed ${timer.fmt})")
+            val fqn = main.get
+            val timer = new Timer(model.eval(fqn))
+            Console.println(s"$fqn returned `${Value.pretty(timer.getResult)}' (elapsed ${timer.fmt})")
           }
 
           if (cmdOpts.test) {

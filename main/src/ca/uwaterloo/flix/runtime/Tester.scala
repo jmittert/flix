@@ -68,7 +68,7 @@ object Tester {
         // Evaluate the test function and catch any potential exception.
         val outcome = try {
           // NB: IntellijIDEA warns about unrelated types. This is not a problem.
-          val result = defn()
+          val result = defn(Array.empty)
           if (result == java.lang.Boolean.TRUE)
             Ok("Returned true.")
           else if (result == java.lang.Boolean.FALSE)

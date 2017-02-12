@@ -27,12 +27,12 @@ class TestBigInt extends FunSuite {
 
   def runTest(input: String, output: AnyRef) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/BigInt.flix").addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   def runIntTest(input: String, output: Int) {
     val flix = new Flix().setOptions(options).addPath("main/src/library/BigInt.flix").addStr(input)
-    assertResult(output)(flix.solve().get.getConstant("r"))
+    assertResult(output)(flix.solve().get.eval("r"))
   }
 
   test("min.01") {

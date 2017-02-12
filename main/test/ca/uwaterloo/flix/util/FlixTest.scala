@@ -54,7 +54,7 @@ class FlixTest(name: String, path: String) extends FunSuite {
         test(sym.name) {
           withClue(sym.loc.format) {
             // Evaluate the function.
-            val result = defn()
+            val result = defn(Array.empty)
             // Expect the true value.
             assertResult(true)(result)
           }
