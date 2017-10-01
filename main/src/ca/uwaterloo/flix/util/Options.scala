@@ -38,7 +38,8 @@ object Options {
     timeout = Duration.Inf,
     threads = Runtime.getRuntime.availableProcessors(),
     verbosity = Verbosity.Normal,
-    verifier = false
+    verifier = false,
+    wasm = false
   )
 
   /**
@@ -81,7 +82,9 @@ case class Options(core: Boolean,
                    timeout: Duration,
                    threads: Int,
                    verbosity: Verbosity,
-                   verifier: Boolean)
+                   verifier: Boolean,
+                   wasm: Boolean
+                  )
 
 /**
   * An option to control the level of verbosity.

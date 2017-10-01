@@ -347,7 +347,7 @@ object CodeGen extends Phase[ExecutableAst.Root, ExecutableAst.Root] {
       // `java.lang.invoke.LambdaMetafactory.metafactory(...)`.
       val clazz = classOf[java.lang.invoke.LambdaMetafactory]
       val method = clazz.getMethods.filter(m => m.getName == "metafactory").head
-      val bsmHandle = new Handle(H_INVOKESTATIC, asm.Type.getInternalName(clazz), method.getName, asm.Type.getMethodDescriptor(method), false)
+      val bsmHandle = new Handle(H_INVOKESTATIC, asm.Type.getInternalName(clazz), method.getName, asm.Type.getMethodDescriptor(method))
 
       // The arguments array for the bootstrap method. Note that the JVM automatically provides the first three
       // arguments (caller, invokedName, invokedType). We need to explicitly provide the remaining three arguments:
@@ -366,7 +366,7 @@ object CodeGen extends Phase[ExecutableAst.Root, ExecutableAst.Root] {
       // object, while implMethod takes a descriptor string and represents the implementation method's type (that is,
       // with the capture variables included in the arguments list).
       val samMethodType = asm.Type.getType(descriptor(tpe, interfaces))
-      val implMethod = new Handle(H_INVOKESTATIC, decorate(FlixClassName(sym.prefix)), sym.suffix, descriptor(fnType, interfaces), false)
+      val implMethod = new Handle(H_INVOKESTATIC, decorate(FlixClassName(sym.prefix)), sym.suffix, descriptor(fnType, interfaces))
       val instantiatedMethodType = asm.Type.getType(descriptor(tpe, interfaces))
       val bsmArgs = Array(samMethodType, implMethod, instantiatedMethodType)
 

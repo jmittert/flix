@@ -19,9 +19,12 @@ package ca.uwaterloo.flix.language.ast
 import java.lang.reflect.{Constructor, Field, Method}
 
 import ca.uwaterloo.flix.language.ast.Ast.{EliminatedBy, IntroducedBy}
+import ca.uwaterloo.flix.language.ast.SimplifiedAst.Expression.{Apply, ApplyClo, ApplyCloTail, ApplyDef, ApplyDefTail, ApplyHook, ApplySelfTail, Assign, BigInt, Binary, Branch, Char, Closure, Deref, Existential, False, Float32, Float64, HoleError, Hook, IfThenElse, Int16, Int32, Int64, Int8, Is, JumpTo, Lambda, LambdaClosure, Let, LetRec, MatchError, NativeConstructor, NativeField, NativeMethod, Ref, Str, SwitchError, Tag, True, Tuple, Unary, Universal, Untag, UserError, Var}
 import ca.uwaterloo.flix.language.phase.{ClosureConv, LambdaLift, Tailrec}
 
-sealed trait SimplifiedAst
+
+sealed trait SimplifiedAst {
+}
 
 object SimplifiedAst {
 
@@ -64,7 +67,91 @@ object SimplifiedAst {
     def tpe: Type
 
     def loc: SourceLocation
+
+    def fold[A](implicit f: (SimplifiedAst.Expression, List[A]) => A): A = this match {
+      case Expression.Unit => f(this, List())
+      case True => f(this, List())
+      case False => f(this, List())
+      case e: Char => f(this, List())
+      case e: Float32 => f(this, List())
+      case e: Float64 => f(this, List())
+      case e: Int8 => f(this, List())
+      case e: Int16 => f(this, List())
+      case e: Int32 => f(this, List())
+      case e: Int64 => f(this, List())
+      case e: BigInt => f(this, List())
+      case e: Str => f(this, List())
+      case e: Var => f(this, List())
+      case e: Def => f(this, List())
+      case e: Lambda => f(this, List())
+      case e: Hook => f(this, List())
+      case Apply(exp, args, tpe, loc) => f(this, exp.fold :: args.map {
+        _.fold
+      })
+      case LambdaClosure(lambda, freeVars, tpe, loc) => f(this, List())
+      case e: Closure => f(this, List())
+      case ApplyClo(exp, args, tpe, loc) => f(this, exp.fold :: (args map {
+        _.fold
+      }))
+      case ApplyDef(sym, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ApplyHook(hook, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ApplyCloTail(exp, args, tpe, loc) => f(this, exp.fold :: (args map {
+        _.fold
+      }))
+      case ApplyDefTail(sym, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ApplySelfTail(sym, formals, actuals, tpe, loc) => f(this, actuals map {
+        _.fold
+      })
+      case Unary(sop, op, exp, tpe, loc) => f(this, List(exp.fold))
+      case Binary(sop, op, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case IfThenElse(exp1, exp2, exp3, tpe, loc) => f(this, List(exp1.fold, exp2.fold, exp3.fold))
+      case Branch(exp, branches, tpe, loc) => f(this, List(exp.fold))
+      case e: JumpTo => f(this, List())
+      case Let(sym, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case LetRec(sym, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case Is(sym, tag, exp, loc) => f(this, List(exp.fold))
+      case Tag(sym, tag, exp, tpe, loc) => f(this, List(exp.fold))
+      case Untag(sym, tag, exp, tpe, loc) => f(this, List(exp.fold))
+      case e: Index => f(this, List())
+      case Tuple(elms, tpe, loc) => f(this, elms map {
+        _.fold
+      })
+      case Ref(exp, tpe, loc) => f(this, List(exp.fold))
+      case Deref(exp, tpe, loc) => f(this, List(exp.fold))
+      case Assign(exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case Existential(fparam, exp, loc) => f(this, List(exp.fold))
+      case Universal(fparam, exp, loc) => f(this, List(exp.fold))
+      case NativeConstructor(constructor, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case e: NativeField => f(this, List())
+      case NativeMethod(method, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case e: UserError => f(this, List())
+      case e: HoleError => f(this, List())
+      case e: MatchError => f(this, List())
+      case e: SwitchError => f(this, List())
+      case e: Var => f(this, List())
+      case e:SimplifiedAst.Expression.Index => f(this, List())
+      case SimplifiedAst.Expression.Def(sym, tpe, loc) => f(this, List())
+    }
+
+    /**
+      * If If the type we are mapping to is a semigroup (i.e. it as a combine function (A, A) => A) then this gives us
+      * an easy fold to use
+      */
+    def semifold[A](m: (SimplifiedAst => A), f: ((A, A) => A)): A = {
+      this.fold((e: SimplifiedAst.Expression, lst: List[A]) => (m(e) :: lst).reduce(f))
+    }
   }
+
 
   object Expression {
 
@@ -342,3 +429,4 @@ object SimplifiedAst {
   case class FreeVar(sym: Symbol.VarSym, tpe: Type) extends SimplifiedAst
 
 }
+

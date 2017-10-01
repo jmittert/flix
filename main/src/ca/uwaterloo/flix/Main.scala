@@ -133,6 +133,26 @@ object Main {
       }
     }
 
+    // Check if we are producing wasm
+    if (cmdOpts.wasm) {
+      val timer = new Timer(for {
+        check <- flix.check()
+        res <- flix.wasmCodeGen(check)
+      } yield res)
+      timer.getResult match {
+        case Validation.Success(wasm, errors) =>
+          errors.foreach(e => println(e.message.fmt))
+          val writer = new PrintWriter(new File("wasm/out.wat"))
+          writer.write(wasm)
+          writer.close()
+          print(wasm)
+
+        case Validation.Failure(errors) =>
+          errors.foreach(e => println(e.message.fmt))
+      }
+      return
+    }
+
     // compute the least model.
     try {
       val timer = new Timer(flix.solve())
@@ -212,6 +232,7 @@ object Main {
                      tutorial: String = null,
                      verbose: Boolean = false,
                      verifier: Boolean = false,
+                     wasm: Boolean = false,
                      xcore: Boolean = false,
                      xdebug: Boolean = false,
                      ximpure: Boolean = false,
@@ -317,6 +338,10 @@ object Main {
       // Verifier.
       opt[Unit]("verifier").action((_, c) => c.copy(verifier = true)).
         text("enables the verifier.")
+
+      // Web Assembly
+      opt[Unit]("wasm").action((_, c) => c.copy(wasm = true)).
+        text("produce Web Assembly")
 
       // Version.
       version("version").text("prints the version number.")

@@ -16,9 +16,10 @@
 
 package ca.uwaterloo.flix.api
 
+import java.io.{File, PrintWriter}
 import java.nio.charset.Charset
 import java.nio.file.{Files, Path, Paths}
-import java.util.concurrent.{ExecutorService, Executors}
+import java.util.concurrent.{ExecutorService, Executors, ThreadFactory}
 
 import ca.uwaterloo.flix.language.ast.Ast.Hook
 import ca.uwaterloo.flix.language.ast._
@@ -262,6 +263,32 @@ class Flix {
     }
   }
 
+  def wasmCodeGen(typedAst: TypedAst.Root): Validation[String, CompilationError] = {
+    if (strings.isEmpty && paths.isEmpty)
+      throw new IllegalStateException("No input specified. Please add at least one string or path input.")
+
+    // Add built-in hooks.
+    addGenSymHook()
+
+    // Construct the compiler pipeline.
+    val pipeline = Documentor |>
+        Documentor |>
+        Stratifier |>
+        Monomorph |>
+        Synthesize |>
+        Simplifier |>
+        Uncurrier |>
+        LambdaLift |>
+        Tailrec |>
+        Inliner |>
+        Optimizer |>
+        TreeShaker |>
+        VarNumbering |>
+        WatGen
+
+    pipeline.run(typedAst)(this).map(_.toString)
+  }
+
   /**
     * Runs the Flix fixed point solver on the program and returns the minimal model.
     */
@@ -351,10 +378,12 @@ class Flix {
     * Returns an executor service fixed to the given number of `threads`.
     */
   private def mkExecutorService(threads: Int): ExecutorService = {
-    Executors.newFixedThreadPool(threads, (r: Runnable) => {
-      val t = new Thread(r)
-      t.setDaemon(true)
-      t
+    Executors.newFixedThreadPool(threads, new ThreadFactory {
+      override def newThread(r: Runnable): Thread = {
+        val t = new Thread(r)
+        t.setDaemon(true)
+        t
+      }
     })
   }
 

@@ -615,7 +615,7 @@ object Synthesize extends Phase[Root, Root] {
                   Expression.Str(tag, sl),
                   Expression.Str("(", sl),
                   mkApplyToString(Expression.Var(freshX, caseType, Eff.Pure, sl)),
-                  Expression.Str(")", sl),
+                  Expression.Str(")", sl)
                 ))
 
                 // Put the components together.
