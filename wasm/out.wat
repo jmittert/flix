@@ -1,114 +1,170 @@
-(module (func $synth$toString$8501 (param $x i32)(result i32)(local i32) (local i32) (local i32)
-i32.const 0
-set_local 1
-i32.const 0
-set_local 2
-i32.const 0
-set_local 3
-i32.const 0)
-(func $synth$toString$8526 (param $x i32)(result i32)(local i32) (local i32) (local i32)
-i32.const 0
-set_local 1
-i32.const 0
-set_local 2
-i32.const 0
-set_local 3
-i32.const 0)
-(func $synth$toString$8501$8733 (param $matchVar i32) (param $case i32)(result i32)(local i32)
-i32.const 0)
-(func $synth$toString$8523 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8511$8760 (result i32)
-i32.const 0
-i32.const 0
-i32.div_s)
-(func $synth$toString$8498 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8511 (param $x i32)(result i32)(local i32) (local i32)
-i32.const 0
-set_local 1
-i32.const 0
-set_local 2
-i32.const 0)
-(func $synth$toString$8533$8790 (result i32)
-i32.const 0
-i32.const 0
-i32.div_s)
-(func $synth$toString$8520 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8492 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8486 (param $x i32)(result i32)
-i32.const 0)
-(func $main (result i32)
-i32.const 123
-i32.const 456
-i32.mul)
-(func $synth$toString$8511$8761 (param $matchVar i32) (param $case i32)(result i32)(local i32) (local i32)
-i32.const 0
-set_local 2
-i32.const 0
-set_local 3
-i32.const 0
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add)
-(func $synth$toString$8526$8740 (param $matchVar i32) (param $case i32)(result i32)(local i32)
-i32.const 0)
-(func $synth$toString$8506 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8480 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8526$8739 (result i32)
-i32.const 0
-i32.const 0
-i32.div_s)
-(func $synth$toString$8483 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8542 (param $x i32)(result i32)
-get_local 0)
-(func $synth$toString$8533 (param $x i32)(result i32)(local i32) (local i32)
-i32.const 0
-set_local 1
-i32.const 0
-set_local 2
-i32.const 0)
-(func $synth$toString$8501$8734 (param $matchVar i32) (param $case i32)(result i32)(local i32)
-i32.const 0)
-(func $synth$toString$8501$8732 (result i32)
-i32.const 0
-i32.const 0
-i32.div_s)
-(func $synth$toString$8533$8791 (param $matchVar i32) (param $case i32)(result i32)(local i32) (local i32)
-i32.const 0
-set_local 2
-i32.const 0
-set_local 3
-i32.const 0
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add
-i32.const 0
-i32.add)
-(func $synth$toString$8495 (param $x i32)(result i32)
-i32.const 0)
-(func $synth$toString$8526$8741 (param $matchVar i32) (param $case i32)(result i32)(local i32)
-i32.const 0)
-(func $synth$toString$8489 (param $x i32)(result i32)
-i32.const 0)
+(module $main (func $synth$toString$8540$8765 (result i32)
+(unreachable))
+(func $synth$toString$8549 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8540 (param $x i32)(result i32)(local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 1)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(i32.const 0))))
+(func $synth$toString$8535 (param $x i32)(result i32)
+(i32.const 0))
+(func $synth$toString$8574 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8555$8813 (param $matchVar i32) (param $case i32)(result i32)(local i32)
+(if (result i32) (unreachable) (then (block (result i32) (unreachable)
+(set_local 2)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add))) (else (i32.const 0))))
+(func $synth$toString$8530$8835 (param $matchVar i32) (param $case i32)(result i32)(local i32)
+(if (result i32) (unreachable) (then (block (result i32) (unreachable)
+(set_local 2)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(block (result i32) (get_local 2)
+(call $synth$toString$8540))
+(i32.add)
+(i32.const 0)
+(i32.add))) (else (i32.const 0))))
+(func $synth$toString$8552 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8518 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8530$8834 (result i32)
+(unreachable))
+(func $synth$toString$8530$8836 (param $matchVar i32) (param $case i32)(result i32)(local i32)
+(if (result i32) (unreachable) (then (block (result i32) (unreachable)
+(set_local 2)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add))) (else (i32.const 0))))
+(func $synth$toString$8540$8766 (param $matchVar i32) (param $case i32)(result i32)(local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(block (result i32) (i32.const 0)
+(set_local 3)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(unreachable)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(block (result i32) (get_local 3)
+(call $synth$toString$8530))
+(i32.add)
+(i32.const 0)
+(i32.add))))
+(func $synth$toString$8562$8855 (result i32)
+(unreachable))
+(func $fact (param $x i32)(result i32)(local i32)
+(if (result i32) (block (result i32) (i32.const 0)
+(set_local 1)
+(get_local 0)
+(get_local 1)
+(i32.eq)) (then (i32.const 1)) (else (get_local 0)
+(block (result i32) (get_local 0)
+(i32.const 1)
+(i32.sub)
+(call $fact))
+(i32.mul))))
+(func $synth$toString$8571 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8562$8856 (param $matchVar i32) (param $case i32)(result i32)(local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(block (result i32) (i32.const 0)
+(set_local 3)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(unreachable)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(block (result i32) (get_local 3)
+(call $synth$toString$8555))
+(i32.add)
+(i32.const 0)
+(i32.add))))
+(func $synth$toString$8521 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8577 (param $x i32)(result i32)
+(get_local 0))
+(func $main (result i32)(local i32) (local i32) (local i32)
+(block (result i32) (block (result i32) (i32.const 5)
+(call $fact))
+(set_local 0)
+(block (result i32) (i32.const 456)
+(set_local 1)
+(block (result i32) (get_local 0)
+(get_local 1)
+(i32.mul)
+(set_local 2)
+(get_local 2)
+(i32.const 201)
+(i32.sub)))))
+(func $synth$toString$8527 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8555 (param $x i32)(result i32)(local i32) (local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 1)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(block (result i32) (i32.const 0)
+(set_local 3)
+(i32.const 0)))))
+(func $synth$toString$8555$8812 (param $matchVar i32) (param $case i32)(result i32)(local i32)
+(if (result i32) (unreachable) (then (block (result i32) (unreachable)
+(set_local 2)
+(i32.const 0)
+(i32.const 0)
+(i32.add)
+(i32.const 0)
+(i32.add)
+(block (result i32) (get_local 2)
+(call $synth$toString$8562))
+(i32.add)
+(i32.const 0)
+(i32.add))) (else (i32.const 0))))
+(func $synth$toString$8530 (param $x i32)(result i32)(local i32) (local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 1)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(block (result i32) (i32.const 0)
+(set_local 3)
+(i32.const 0)))))
+(func $synth$toString$8555$8811 (result i32)
+(unreachable))
+(func $synth$toString$8524 (param $x i32)(result i32)
+(unreachable))
+(func $synth$toString$8562 (param $x i32)(result i32)(local i32) (local i32)
+(block (result i32) (i32.const 0)
+(set_local 1)
+(block (result i32) (i32.const 0)
+(set_local 2)
+(i32.const 0))))
+(func $synth$toString$8515 (param $x i32)(result i32)
+(unreachable))
 (func $genSym! (result i32)
-i32.const 0)
+(i32.const 0))
 (export "main" (func $main))
 )

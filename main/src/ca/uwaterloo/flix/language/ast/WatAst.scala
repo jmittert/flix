@@ -18,21 +18,21 @@
 package ca.uwaterloo.flix.language.ast
 
 import ca.uwaterloo.flix.language.ast
-import ca.uwaterloo.flix.language.ast.WatAst.Binop._
+import ca.uwaterloo.flix.language.ast.WatAst.Binop.{Ne, _}
 import ca.uwaterloo.flix.language.ast.WatAst.Expr._
 import ca.uwaterloo.flix.language.ast.WatAst.Func.Local.Loc
 import ca.uwaterloo.flix.language.ast.WatAst.Func._
 import ca.uwaterloo.flix.language.ast.WatAst.FuncSig.FSig
+import ca.uwaterloo.flix.language.ast.WatAst.Instr._
 import ca.uwaterloo.flix.language.ast.WatAst.Module.Mod1
 import ca.uwaterloo.flix.language.ast.WatAst.Operation._
 import ca.uwaterloo.flix.language.ast.WatAst.Param._
-import ca.uwaterloo.flix.language.ast.WatAst.Relop._
 import ca.uwaterloo.flix.language.ast.WatAst.Result.Res
 import ca.uwaterloo.flix.language.ast.WatAst._
 import ca.uwaterloo.flix.language.ast.WatAst.Sign._
-import ca.uwaterloo.flix.language.ast.WatAst.Unop._
+import ca.uwaterloo.flix.language.ast.WatAst.Unop.{Eqz, _}
 import ca.uwaterloo.flix.language.ast.WatAst.Value._
-import ca.uwaterloo.flix.language.ast.WatAst.WType._
+import ca.uwaterloo.flix.language.ast.WatAst.ValType._
 
 sealed trait WatAst {
   override def toString: String = this match {
@@ -40,7 +40,6 @@ sealed trait WatAst {
     case a: Module => a.toString
     case a: Unop => a.toString
     case a: WatAst.Binop => a.toString
-    case a: Relop => a.toString
     case a: Sign => a.toString
     case Offset(amt) => "offset=" + amt
     case Align(amt) => "align=(" + amt + ")"
@@ -49,7 +48,6 @@ sealed trait WatAst {
     case a: Func => a.toString
     case a: Local => a.toString
     case a: Value => a.toString
-    case a: WType => a.toString
     case a: Instr => a.toString
   }
 }
@@ -64,36 +62,51 @@ object WatAst {
 
   sealed trait Module extends WatAst {
     override def toString: String = this match {
-      case Mod1(name, funcs) => "(module " + funcs.mkString("\n") +  "\n(export \"main\" (func $main))\n)\n"
+      case Mod1(name, funcs) => f"(module ${showOpt(name)}" + funcs.mkString("\n") + "\n(export \"main\" (func $main))\n)\n"
     }
   }
 
   object Module {
 
-    case class Mod1(name: Option[String], funcs: List[Func]) extends Module
+    case class Mod1(name: Option[Id], funcs: List[Func]) extends Module
 
   }
+
+  type Typeidx = Int
+  type Funcidx = Int
+  type Tableidx = Int
+  type Memidx = Int
+  type Globalidx = Int
+  type Localidx = Int
+  type Labelidx = Int
+
+  case class Id(s: String) {
+    override def toString: String = "$" + s
+  }
+
 
   sealed trait Unop extends WatAst {
     override def toString: String = this match {
-      case Shrs => "shr_s"
-      case Shru => "shr_u"
-      case Shls => "shl_s"
-      case Shlu => "shl_u"
       case Eqz => "eqz"
     }
   }
+
   object Unop {
 
     // See https://github.com/sunfishcode/wasm-reference-manual/blob/master/WebAssembly.md#integer-shift-left
-    case object Shls extends Unop
-    case object Shlu extends Unop
-    case object Shrs extends Unop
-    case object Shru extends Unop
+
     case object Eqz extends Unop
+
   }
 
   object Binop {
+    case object Shl_s extends Binop
+
+    case object Shl_u extends Binop
+
+    case object Shr_s extends Binop
+
+    case object Shr_u extends Binop
 
     case object Add extends Binop
 
@@ -105,6 +118,24 @@ object WatAst {
 
     case object Div_s extends Binop
 
+    case object Rem_u extends Binop
+
+    case object Rem_s extends Binop
+
+    case object Eq extends Binop
+    case object Ne extends Binop
+    case object Gt_s extends Binop
+    case object Gt_u extends Binop
+    case object Lt_s extends Binop
+    case object Lt_u extends Binop
+    case object Le_s extends Binop
+    case object Le_u extends Binop
+    case object Ge_s extends Binop
+    case object Ge_u extends Binop
+    case object And extends Binop
+    case object Or extends Binop
+    case object Xor extends Binop
+
   }
 
   sealed trait Binop extends WatAst {
@@ -114,24 +145,25 @@ object WatAst {
       case Mul => "mul"
       case Div_u => "div_u"
       case Div_s => "div_s"
-    }
-  }
-
-  object Relop {
-
-    case object Eq extends Relop
-
-    case object Ne extends Relop
-
-    case object Lt extends Relop
-
-  }
-
-  sealed trait Relop extends WatAst {
-    override def toString: String = this match {
+      case Rem_u => "rem_u"
+      case Rem_s => "rem_s"
       case Eq => "eq"
       case Ne => "ne"
-      case Lt => "lt"
+      case Lt_s => "lt_s"
+      case Lt_u => "lt_u"
+      case Gt_s => "gt_s"
+      case Gt_u => "gt_u"
+      case Le_s => "le_s"
+      case Le_u => "le_u"
+      case Ge_s => "ge_s"
+      case Ge_u => "ge_u"
+      case And  => "and"
+      case Or => "or"
+      case Xor => "xor"
+      case Shr_s => "shr_s"
+      case Shr_u => "shr_u"
+      case Shl_s => "shl_s"
+      case Shl_u => "shl_u"
     }
   }
 
@@ -143,11 +175,15 @@ object WatAst {
   }
 
   object Sign {
+
     case object Signed extends Sign
+
     case object Unsigned extends Sign
+
   }
 
   case class Offset(amt: Int) extends WatAst
+
   case class Align(amt: Int) extends WatAst
 
 
@@ -161,7 +197,9 @@ object WatAst {
   }
 
   object FuncSig {
-    case class FSig(tpe: Option[WType], params: List[Param], result: Result) extends FuncSig
+
+    case class FSig(tpe: Option[ValType], params: List[Param], result: Result) extends FuncSig
+
   }
 
   sealed trait Param extends WatAst {
@@ -172,8 +210,11 @@ object WatAst {
   }
 
   object Param {
-    case class ParamT(name: String, tpe: WType) extends Param
-    case class ParamN(tpes: List[WType]) extends Param
+
+    case class ParamT(name: String, tpe: ValType) extends Param
+
+    case class ParamN(tpes: List[ValType]) extends Param
+
   }
 
   sealed trait Result {
@@ -183,12 +224,14 @@ object WatAst {
   }
 
   object Result {
-    case class Res(tpe: WType) extends Result
+
+    case class Res(tpe: ValType) extends Result
+
   }
 
   sealed trait Func extends WatAst {
     override def toString: String = this match {
-      case LocalFunc(name, sig, locals, instrs) => "(func " + showOptName(name) + sig + locals.mkString(" ") + "\n" + instrs.mkString("\n") + ")"
+      case LocalFunc(name, sig, locals, instrs) => "(func " + showOpt(name) + sig + locals.mkString(" ") + "\n" + instrs.mkString("\n") + ")"
 
     }
   }
@@ -196,18 +239,18 @@ object WatAst {
 
   object Func {
 
-    case class LocalFunc(name: Option[String], sig: FuncSig, locals: List[Local], instrs: List[Instr]) extends Func
+    case class LocalFunc(name: Option[Id], sig: FuncSig, locals: List[Local], instrs: List[Instr]) extends Func
 
 
     sealed trait Local extends WatAst {
       override def toString: String = this match {
-        case Loc(name, tpe) => "(local " + showOptName(name) + tpe.toString + ")"
+        case Loc(name, tpe) => "(local " + showOpt(name) + tpe.toString + ")"
       }
     }
 
     object Local {
 
-      case class Loc(name: Option[String], tpe: WType) extends Local
+      case class Loc(name: Option[String], tpe: ValType) extends Local
 
     }
 
@@ -234,7 +277,7 @@ object WatAst {
 
   }
 
-  sealed trait WType extends WatAst {
+  sealed trait ValType {
     override def toString: String = this match {
       case I32 => "i32"
       case I64 => "i64"
@@ -243,51 +286,93 @@ object WatAst {
     }
   }
 
-  object WType {
+  object ValType {
 
-    case object I32 extends WType
+    case object I32 extends ValType
 
-    case object I64 extends WType
+    case object I64 extends ValType
 
-    case object F32 extends WType
+    case object F32 extends ValType
 
-    case object F64 extends WType
+    case object F64 extends ValType
 
   }
 
-  sealed trait Instr extends WatAst
+  case class ResultType(tpe: List[ValType]) {
+    override def toString: String = f"(result ${tpe.head.toString})"
+  }
+
+  sealed trait Instr extends WatAst {
+    override def toString: String = "(" + (this match {
+      case Nop => "nop"
+      case Unreachable => "unreachable"
+      case Block(tpe, lab, instrs) => f"block ${showOpt(lab)}$tpe ${instrs.mkString("\n")}"
+      case Loop(tpe, lab, instrs) => f"loop ${showOpt(lab)}$tpe (${instrs.mkString("\n")}) end"
+      case IfElse(tpe, lab, test, tBranch, fBranch) => f"if $tpe ${test.mkString("\n")} (then ${tBranch.mkString("\n")}) (else ${fBranch.mkString("\n")})"
+      case Br(idx) => f"br $idx"
+      case Br_if(idx) => f"br_if $idx"
+      case Br_table(idx) => f"br_table $idx"
+      case Return => "return"
+      case Call(idx) => f"call $idx"
+      case Call_indirect(idx) => f"call_indirect $idx"
+      case a => a.toString
+    }) + ")"
+  }
+
+
+  object Instr {
+
+    case object Nop extends Instr
+
+    case object Unreachable extends Instr
+
+    case class Block(tpe: ResultType, label: Option[Id], instrs: List[Instr]) extends Instr
+
+    case class Loop(tpe: ResultType, label: Option[Id], instrs: List[Instr]) extends Instr
+
+    case class IfElse(tpe: ResultType, label: Option[Id], test: List[Instr], tBranch: List[Instr], fBranch: List[Instr]) extends Instr
+
+    case class Br(idx: Labelidx) extends Instr
+
+    case class Br_if(idx: Labelidx) extends Instr
+
+    case class Br_table(idx: Labelidx) extends Instr
+
+    case object Return extends Instr
+
+    case class Call(idx: Id) extends Instr
+
+    case class Call_indirect(idx: Typeidx) extends Instr
+
+  }
 
   sealed trait Expr extends Instr {
     override def toString: String = this match {
       case Op(o, exprs) => exprs.mkString("\n") + "\n" + o.toString
-      case Exprs(exprs) => exprs.mkString("\n")
     }
   }
 
   object Expr {
 
     case class Op(o: Operation, exprs: List[WatAst]) extends Expr
-    case class Exprs(lst: List[WatAst]) extends Expr
 
   }
 
   sealed trait Operation extends Instr {
-    override def toString: String = this match {
-      case Nop => "nop"
+    override def toString: String = "(" + (this match {
       case Bop(tpe, o) => tpe.toString + "." + o.toString
       case Const(tpe, v) => tpe.toString + ".const " + v.toString
       case SetLocal(i) => "set_local " + i
       case GetLocal(i) => "get_local " + i
-    }
+    }) + ")"
   }
 
   object Operation {
 
-    case object Nop extends Operation
 
-    case class Bop(tpe: WType, o: Binop) extends Operation
+    case class Bop(tpe: ValType, o: Binop) extends Operation
 
-    case class Const(tpe: WType, v: Value) extends Operation
+    case class Const(tpe: ValType, v: Value) extends Operation
 
     case class SetLocal(imm: Int) extends Operation
 
@@ -297,11 +382,6 @@ object WatAst {
 
   def showOpt[A](opt: Option[A]): String = opt match {
     case Some(x) => x.toString + " "
-    case None => ""
-  }
-
-  def showOptName[A](opt: Option[A]): String = opt match {
-    case Some(x) => "$" + x.toString + " "
     case None => ""
   }
 }

@@ -18,123 +18,129 @@ package ca.uwaterloo.flix.language.phase
 import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.CompilationError
 import ca.uwaterloo.flix.language.ast.BinaryOperator._
-import ca.uwaterloo.flix.language.ast.SimplifiedAst.Expression._
-import ca.uwaterloo.flix.language.ast.WatAst.Binop.{Add, Div_s, Mul, Sub}
-import ca.uwaterloo.flix.language.ast.WatAst.Expr.{Exprs, Op}
+import ca.uwaterloo.flix.language.ast.ExecutableAst.Expression._
+import ca.uwaterloo.flix.language.ast.WatAst.Binop._
+import ca.uwaterloo.flix.language.ast.WatAst.Expr._
 import ca.uwaterloo.flix.language.ast.WatAst.Func.Local.Loc
 import ca.uwaterloo.flix.language.ast.WatAst._
-import ca.uwaterloo.flix.language.ast.WatAst.Func.{Local, LocalFunc}
 import ca.uwaterloo.flix.language.ast.WatAst.FuncSig.FSig
+import ca.uwaterloo.flix.language.ast.WatAst.Instr._
 import ca.uwaterloo.flix.language.ast.WatAst.Operation._
 import ca.uwaterloo.flix.language.ast.WatAst.Param.ParamT
 import ca.uwaterloo.flix.language.ast.WatAst.Result.Res
 import ca.uwaterloo.flix.language.ast.WatAst.Value.{Float32, Float64, Int32, Int64}
-import ca.uwaterloo.flix.language.ast.WatAst.WType.{F32, F64, I32, I64}
+import ca.uwaterloo.flix.language.ast.WatAst.ValType.{F32, F64, I32, I64}
 import ca.uwaterloo.flix.language.ast._
-import ca.uwaterloo.flix.util.InternalCompilerException
 import ca.uwaterloo.flix.util.Validation
 import ca.uwaterloo.flix.util.Validation._
 
-object WatGen extends Phase[SimplifiedAst.Root, WatAst.Root] {
+object WatGen extends Phase[ExecutableAst.Root, WatAst.Root] {
 
-  def run(root: SimplifiedAst.Root)(implicit flix: Flix): Validation[WatAst.Root, CompilationError] = {
+  def run(root: ExecutableAst.Root)(implicit flix: Flix): Validation[WatAst.Root, CompilationError] = {
     // Put GenSym into the implicit scope.
 
     val time = root.time
-    WatAst.Root(time, WatAst.Module.Mod1(Some("main"), defsToWat(root.defs))).toSuccess
+    WatAst.Root(time, WatAst.Module.Mod1(Some(Id("main")), defsToWat(root.defs))).toSuccess
   }
 
-  def defsToWat(defs: Map[Symbol.DefnSym, SimplifiedAst.Def]): List[WatAst.Func] = defs.toList.map(toWat)
+  def defsToWat(defs: Map[Symbol.DefnSym, ExecutableAst.Def]): List[WatAst.Func] = defs.toList.map(toWat)
 
 
-  def toWat(sast: (Symbol.DefnSym, SimplifiedAst.Def)): WatAst.Func = {
+  def toWat(sast: (Symbol.DefnSym, ExecutableAst.Def)): WatAst.Func = {
     val defn = sast._2
-    val wasmParams = defn.fparams.map(f => ParamT(f.sym.text, I32))
+    val wasmParams = defn.formals.toList.map(f => ParamT(f.sym.text, I32))
     WatAst.Func.LocalFunc(
-      Some(sast._1.name),
+      Some(Id(sast._1.name)),
       FSig(None, wasmParams, Res(I32)),
       List.fill(countLocals(defn.exp))(Loc(None, I32)),
       List(Expression.toWat(sast._2.exp)))
   }
 
   object Expression {
-    def toWat(sast: SimplifiedAst.Expression): Instr = sast match {
-      case SimplifiedAst.Expression.Unit => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.True => Const(I32, Int32(1))
-      case SimplifiedAst.Expression.False => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.Char(lit) => Const(I32, Int32(lit))
-      case SimplifiedAst.Expression.Float32(lit) => Const(F32, Float32(lit))
-      case SimplifiedAst.Expression.Float64(lit) => Const(F64, Float64(lit))
-      case SimplifiedAst.Expression.Int8(lit) => Const(I32, Int32(lit))
-      case SimplifiedAst.Expression.Int16(lit) => Const(I32, Int32(lit))
-      case SimplifiedAst.Expression.Int32(lit) => Const(I32, Int32(lit))
-      case SimplifiedAst.Expression.Int64(lit) => Const(I64, Int64(lit))
-      case SimplifiedAst.Expression.BigInt(lit) => ???
-      case SimplifiedAst.Expression.Str(lit) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.Var(sym, tpe, loc) => GetLocal(sym.getStackOffset)
-      case SimplifiedAst.Expression.Def(name, tpe, loc) => ???
-      case SimplifiedAst.Expression.Lambda(args, body, tpe, loc) =>
-        throw InternalCompilerException("Lambdas should have been converted to closures and lifted.")
-      case SimplifiedAst.Expression.Hook(hook, tpe, loc) =>
-        throw InternalCompilerException("Hooks should have been inlined into ApplyHooks or wrapped inside lambdas.")
-      case SimplifiedAst.Expression.LambdaClosure(lambda, freeVars, tpe, loc) =>
-        throw InternalCompilerException("MkClosure should have been replaced by MkClosureRef after lambda lifting.")
-      case SimplifiedAst.Expression.Apply(exp, args, tpe, loc) =>
-        throw InternalCompilerException("Apply should have been replaced by ClosureConv.") // TODO: Doc
-      case SimplifiedAst.Expression.Closure(exp, freeVars, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.ApplyClo(exp, args, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.ApplyDef(name, args, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.ApplyCloTail(exp, args, tpe, loc) => ???
-      case SimplifiedAst.Expression.ApplyDefTail(name, args, tpe, loc) => ???
-      case SimplifiedAst.Expression.ApplySelfTail(name, formals, actuals, tpe, loc) => ???
-      case SimplifiedAst.Expression.ApplyHook(hook, args, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.Unary(sop, op, exp, tpe, loc) => ???
-      case SimplifiedAst.Expression.Binary(sop, op, exp1, exp2, tpe, loc) => op match {
+    def toWat(sast: ExecutableAst.Expression): Instr = sast match {
+      case ExecutableAst.Expression.Unit => Const(I32, Int32(0))
+      case ExecutableAst.Expression.True => Const(I32, Int32(1))
+      case ExecutableAst.Expression.False => Const(I32, Int32(0))
+      case ExecutableAst.Expression.Char(lit) => Const(I32, Int32(lit))
+      case ExecutableAst.Expression.Float32(lit) => Const(F32, Float32(lit))
+      case ExecutableAst.Expression.Float64(lit) => Const(F64, Float64(lit))
+      case ExecutableAst.Expression.Int8(lit) => Const(I32, Int32(lit))
+      case ExecutableAst.Expression.Int16(lit) => Const(I32, Int32(lit))
+      case ExecutableAst.Expression.Int32(lit) => Const(I32, Int32(lit))
+      case ExecutableAst.Expression.Int64(lit) => Const(I64, Int64(lit))
+      case ExecutableAst.Expression.BigInt(lit) => ???
+      case ExecutableAst.Expression.Str(lit) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.Var(sym, tpe, loc) => GetLocal(sym.getStackOffset)
+      case ExecutableAst.Expression.Closure(exp, freeVars, fnType, tpe, loc) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.ApplyClo(exp, args, tpe, loc) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.ApplyDef(name, args, tpe, loc) => Block(ResultType(List(I32)), None,
+        args.map(toWat) ::: List(Call(Id(name.name))))
+      case ExecutableAst.Expression.ApplyCloTail(exp, args, tpe, loc) => ???
+      case ExecutableAst.Expression.ApplyDefTail(name, args, tpe, loc) => ???
+      case ExecutableAst.Expression.ApplySelfTail(name, formals, actuals, tpe, loc) => ???
+      case ExecutableAst.Expression.ApplyHook(hook, args, tpe, loc) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.Unary(sop, op, exp, tpe, loc) => ???
+      case ExecutableAst.Expression.Binary(sop, op, exp1, exp2, tpe, loc) => op match {
         case o: ArithmeticOperator => o match {
-          case Plus => Op( Bop(I32, Add), List(toWat(exp1), toWat(exp2)))
-          case Minus => Op( Bop(I32, Sub), List(toWat(exp1), toWat(exp2)))
-          case Times => Op( Bop(I32, Mul), List(toWat(exp1), toWat(exp2)))
-          case Divide => Op( Bop(I32, Div_s), List(toWat(exp1), toWat(exp2)))
-          case Modulo => ???
+          case Plus => Op(Bop(I32, Add), List(toWat(exp1), toWat(exp2)))
+          case Minus => Op(Bop(I32, Sub), List(toWat(exp1), toWat(exp2)))
+          case Times => Op(Bop(I32, Mul), List(toWat(exp1), toWat(exp2)))
+          case Divide => Op(Bop(I32, Div_s), List(toWat(exp1), toWat(exp2)))
+          case Modulo => Op(Bop(I32, Rem_s), List(toWat(exp1), toWat(exp2)))
           case Exponentiate => ???
         }
-        case _: ComparisonOperator => ???
-        case _: LogicalOperator => ???
-        case _: BitwiseOperator => ???
+        case o: ComparisonOperator => o match {
+          case _: EqualityOperator => Op(Bop(I32, Eq), List(toWat(exp1), toWat(exp2)))
+          case Less => Op(Bop(I32, Lt_s), List(toWat(exp1), toWat(exp2)))
+          case LessEqual => Op(Bop(I32, Le_s), List(toWat(exp1), toWat(exp2)))
+          case Greater => Op(Bop(I32, Gt_s), List(toWat(exp1), toWat(exp2)))
+          case GreaterEqual => Op(Bop(I32, Ge_s), List(toWat(exp1), toWat(exp2)))
+        }
+        case o: LogicalOperator => o match {
+          case LogicalAnd => Op(Bop(I32, And), List(toWat(exp1), toWat(exp2)))
+          case LogicalOr => Op(Bop(I32, Or), List(toWat(exp1), toWat(exp2)))
+        }
+        case o: BitwiseOperator => o match {
+          case BitwiseAnd => Op(Bop(I32, And), List(toWat(exp1), toWat(exp2)))
+          case BitwiseOr => Op(Bop(I32, Or), List(toWat(exp1), toWat(exp2)))
+          case BitwiseXor => Op(Bop(I32, Xor), List(toWat(exp1), toWat(exp2)))
+          case BitwiseLeftShift => Op(Bop(I32, Shl_u), List(toWat(exp1), toWat(exp2)))
+          case BitwiseRightShift => Op(Bop(I32, Shr_u), List(toWat(exp1), toWat(exp2)))
+        }
       }
-      case SimplifiedAst.Expression.IfThenElse(exp1, exp2, exp3, tpe, loc) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.IfThenElse(exp1, exp2, exp3, tpe, loc) =>
+        IfElse(ResultType(List(I32)), None, List(toWat(exp1)), List(toWat(exp2)), List(toWat(exp3)))
 
-      case SimplifiedAst.Expression.Branch(exp, branches, tpe, loc) => ???
-      case SimplifiedAst.Expression.JumpTo(sym, tpe, loc) => ???
-      case SimplifiedAst.Expression.Let(sym, exp1, exp2, tpe, loc) => Exprs(List(
+
+      case ExecutableAst.Expression.Branch(exp, branches, tpe, loc) => ???
+      case ExecutableAst.Expression.JumpTo(sym, tpe, loc) => ???
+      case ExecutableAst.Expression.Let(sym, exp1, exp2, tpe, loc) => Block(ResultType(List(I32)), None, List(
         toWat(exp1),
         SetLocal(sym.getStackOffset),
         toWat(exp2)
       ))
-      case SimplifiedAst.Expression.LetRec(sym, exp1, exp2, tpe, loc) => ???
-      case SimplifiedAst.Expression.Is(sym, tag, exp, loc) => ???
-      case SimplifiedAst.Expression.Tag(enum, tag, exp, tpe, loc) => ???
-      case SimplifiedAst.Expression.Untag(sym, tag, exp, tpe, loc) => ???
-      case SimplifiedAst.Expression.Index(base, offset, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.Tuple(elms, tpe, loc) => ???
-      case SimplifiedAst.Expression.Ref(exp, tpe, loc) => ???
-      case SimplifiedAst.Expression.Deref(exp, tpe, loc) => ???
-      case SimplifiedAst.Expression.Assign(exp1, exp2, tpe, loc) => ???
-      case SimplifiedAst.Expression.Existential(fparam, exp, loc) => ???
-      case SimplifiedAst.Expression.Universal(fparam, exp, loc) => ???
-      case SimplifiedAst.Expression.NativeConstructor(constructor, args, tpe, loc) => ???
-      case SimplifiedAst.Expression.NativeField(field, tpe, loc) => ???
-      case SimplifiedAst.Expression.NativeMethod(method, args, tpe, loc) => Const(I32, Int32(0))
-      case SimplifiedAst.Expression.UserError(tpe, loc) => ???
-      case SimplifiedAst.Expression.HoleError(sym, tpe, eff, loc) => ???
-      case SimplifiedAst.Expression.MatchError(tpe, loc) => Op(
-        Bop(I32, Div_s),
-        List(Const(I32, Int32(0)), Const(I32, Int32(0))))
-      case SimplifiedAst.Expression.SwitchError(tpe, loc) => ???
+      case ExecutableAst.Expression.LetRec(sym, exp1, exp2, tpe, loc) => ???
+      case ExecutableAst.Expression.Is(sym, tag, exp, loc) => Unreachable
+      case ExecutableAst.Expression.Tag(enum, tag, exp, tpe, loc) => ???
+      case ExecutableAst.Expression.Untag(sym, tag, exp, tpe, loc) => Unreachable
+      case ExecutableAst.Expression.Index(base, offset, tpe, loc) => Const(I32, Int32(0))
+      case ExecutableAst.Expression.Tuple(elms, tpe, loc) => ???
+      case ExecutableAst.Expression.Ref(exp, tpe, loc) => ???
+      case ExecutableAst.Expression.Deref(exp, tpe, loc) => ???
+      case ExecutableAst.Expression.Assign(exp1, exp2, tpe, loc) => ???
+      case ExecutableAst.Expression.Existential(fparam, exp, loc) => ???
+      case ExecutableAst.Expression.Universal(fparam, exp, loc) => ???
+      case ExecutableAst.Expression.NativeConstructor(constructor, args, tpe, loc) => Unreachable
+      case ExecutableAst.Expression.NativeField(field, tpe, loc) => Unreachable
+      case ExecutableAst.Expression.NativeMethod(method, args, tpe, loc) => Unreachable
+      case ExecutableAst.Expression.UserError(tpe, loc) => Unreachable
+      case ExecutableAst.Expression.HoleError(sym, tpe, loc) => Unreachable
+      case ExecutableAst.Expression.MatchError(tpe, loc) => Unreachable
+      case ExecutableAst.Expression.SwitchError(tpe, loc) => Unreachable
     }
   }
 
-  def countLocals(exp: SimplifiedAst.Expression): Int = exp.semifold(
+  def countLocals(exp: ExecutableAst.Expression): Int = exp.semifold(
     {
       case Let(sym, exp1, exp2, tpe, loc) => 1
       case LetRec(sym, exp1, exp2, tpe, loc) => 1

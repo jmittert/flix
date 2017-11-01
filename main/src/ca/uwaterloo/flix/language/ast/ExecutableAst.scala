@@ -19,6 +19,7 @@ package ca.uwaterloo.flix.language.ast
 import java.lang.reflect.{Constructor, Field, Method}
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
+import ca.uwaterloo.flix.language.ast.ExecutableAst.Expression.{False, True}
 import ca.uwaterloo.flix.language.ast.Symbol.EnumSym
 import ca.uwaterloo.flix.language.phase.CodegenHelper.{FlixClassName, QualName, TupleClassName}
 import ca.uwaterloo.flix.runtime.InvocationTarget
@@ -137,6 +138,81 @@ object ExecutableAst {
     def tpe: Type
 
     def loc: SourceLocation
+
+    def fold[A](implicit f: (ExecutableAst.Expression, List[A]) => A): A = this match {
+      case Expression.Unit => f(this, List())
+      case True => f(this, List())
+      case False => f(this, List())
+      case e: ExecutableAst.Expression.Char => f(this, List())
+      case e: ExecutableAst.Expression.Float32 => f(this, List())
+      case e: ExecutableAst.Expression.Float64 => f(this, List())
+      case e: ExecutableAst.Expression.Int8 => f(this, List())
+      case e: ExecutableAst.Expression.Int16 => f(this, List())
+      case e: ExecutableAst.Expression.Int32 => f(this, List())
+      case e: ExecutableAst.Expression.Int64 => f(this, List())
+      case e: ExecutableAst.Expression.BigInt => f(this, List())
+      case e: ExecutableAst.Expression.Str => f(this, List())
+      case e: ExecutableAst.Expression.Var => f(this, List())
+      case e: ExecutableAst.Expression.Closure => f(this, List())
+      case ExecutableAst.Expression.ApplyClo(exp, args, tpe, loc) => f(this, exp.fold :: (args map {
+        _.fold
+      }))
+      case ExecutableAst.Expression.ApplyDef(sym, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ExecutableAst.Expression.ApplyHook(hook, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ExecutableAst.Expression.ApplyCloTail(exp, args, tpe, loc) => f(this, exp.fold :: (args map {
+        _.fold
+      }))
+      case ExecutableAst.Expression.ApplyDefTail(sym, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case ExecutableAst.Expression.ApplySelfTail(sym, formals, actuals, tpe, loc) => f(this, actuals map {
+        _.fold
+      })
+      case ExecutableAst.Expression.Unary(sop, op, exp, tpe, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Binary(sop, op, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case ExecutableAst.Expression.IfThenElse(exp1, exp2, exp3, tpe, loc) => f(this, List(exp1.fold, exp2.fold, exp3.fold))
+      case ExecutableAst.Expression.Branch(exp, branches, tpe, loc) => f(this, List(exp.fold))
+      case e: ExecutableAst.Expression.JumpTo => f(this, List())
+      case ExecutableAst.Expression.Let(sym, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case ExecutableAst.Expression.LetRec(sym, exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case ExecutableAst.Expression.Is(sym, tag, exp, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Tag(sym, tag, exp, tpe, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Untag(sym, tag, exp, tpe, loc) => f(this, List(exp.fold))
+      case e: Index => f(this, List())
+      case ExecutableAst.Expression.Tuple(elms, tpe, loc) => f(this, elms.toList map {
+        _.fold
+      })
+      case ExecutableAst.Expression.Ref(exp, tpe, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Deref(exp, tpe, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Assign(exp1, exp2, tpe, loc) => f(this, List(exp1.fold, exp2.fold))
+      case ExecutableAst.Expression.Existential(fparam, exp, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.Universal(fparam, exp, loc) => f(this, List(exp.fold))
+      case ExecutableAst.Expression.NativeConstructor(constructor, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case e: ExecutableAst.Expression.NativeField => f(this, List())
+      case ExecutableAst.Expression.NativeMethod(method, args, tpe, loc) => f(this, args map {
+        _.fold
+      })
+      case e: ExecutableAst.Expression.UserError => f(this, List())
+      case e: ExecutableAst.Expression.HoleError => f(this, List())
+      case e: ExecutableAst.Expression.MatchError => f(this, List())
+      case e: ExecutableAst.Expression.SwitchError => f(this, List())
+      case e: ExecutableAst.Expression.Index => f(this, List())
+    }
+
+    /**
+      * If If the type we are mapping to is a semigroup (i.e. it as a combine function (A, A) => A) then this gives us
+      * an easy fold to use
+      */
+    def semifold[A](m: (ExecutableAst => A), f: ((A, A) => A)): A = {
+      this.fold((e: ExecutableAst.Expression, lst: List[A]) => (m(e) :: lst).reduce(f))
+    }
+
   }
 
   object Expression {

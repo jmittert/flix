@@ -284,6 +284,7 @@ class Flix {
         Optimizer |>
         TreeShaker |>
         VarNumbering |>
+        CreateExecutableAst |>
         WatGen
 
     pipeline.run(typedAst)(this).map(_.toString)
