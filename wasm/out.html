@@ -7,7 +7,7 @@
     </head>
     <body>
         <script>
-         function fetchAndInstantiate(url, importObject) {
+         function fetchAndRun(url, importObject) {
              return fetch(url).then(response =>
                  response.arrayBuffer()
              ).then(bytes =>
@@ -21,7 +21,7 @@
                  log: console.log
              }
          }
-         fetchAndInstantiate('out.wasm', importObject).then(function(instance) {
+         fetchAndRun('out.wasm', importObject).then(function(instance) {
            var res = instance.exports.main()
              console.log(res);
              document.getElementById("res").innerHTML=res
